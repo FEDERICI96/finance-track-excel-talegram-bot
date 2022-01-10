@@ -131,8 +131,11 @@ const Comandi = {
             "text": "ULTIMI MOVIMENTI",
             "callback_data": "ULTIMI MOVIMENTI"
         }], [{
-            "text": "RIEPILOGO MENSILE",
-            "callback_data": "RIEPILOGO MENSILE"
+            "text": "MESE",
+            "callback_data": "MESE"
+        }], [{
+            "text": "MESE PRECEDENTE",
+            "callback_data": "MESE PRECEDENTE"
         }]]
     }
 }
