@@ -12,8 +12,11 @@ var mese = (new Date()).getMonth()
 var nomeMese = mesi[mese]
 var sheet = spreadsheet.getSheetByName(nomeMese);
 
-var benzFile = SpreadsheetApp.openByUrl(/*url to fuel sheet*/)
-var benzSheet = benzFile.getSheetByName("BENZINA")
+try{
+  //  va nel try perche va in errore quando viene chiamata onEdit()
+    var benzFile = SpreadsheetApp.openByUrl(/*url to fuel sheet*/)
+    var benzSheet = benzFile.getSheetByName("BENZINA")
+}catch(e){}
 
 const Primaria = {
     "reply_markup": {
@@ -136,6 +139,15 @@ const Comandi = {
         }], [{
             "text": "MESE PRECEDENTE",
             "callback_data": "MESE PRECEDENTE"
+        }]]
+    }
+}
+
+const EliminaUltimoMovimento = {
+    "reply_markup": {
+        "inline_keyboard": [[{
+            "text": "ELIMINA ULTIMO MOVIMENTO",
+            "callback_data": "ELIMINA ULTIMO MOVIMENTO"
         }]]
     }
 }
