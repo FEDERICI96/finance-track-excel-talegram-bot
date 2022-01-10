@@ -121,11 +121,16 @@ function doPost(e) {
             }else if(contents.callback_query.data == "MESE"){
               sendMessage(chat_id, getRiepilogoMensile("corrente"), false);
             }else if(contents.callback_query.data == "ULTIMI MOVIMENTI"){
-              sendMessage(chat_id, getUltimiMovimenti(), false);
+              sendMessage(chat_id, getUltimiMovimenti(), true, EliminaUltimoMovimento);
             }else if(contents.callback_query.data == "MESE PRECEDENTE"){
               sendMessage(chat_id, getRiepilogoMensile("precedente"), false);
-            }
-          
+            }          
+        }else if(contents.callback_query.data == "ELIMINA ULTIMO MOVIMENTO"){
+            deleteMessage(chat_id, PropertiesService.getScriptProperties().getProperty('MsgId'));
+            var answer, res = eliminaUltimoMovimento()
+            if(res == "OK"){ answer = "Movimento eliminato" }
+            else{ answer = "Nessun movimento da eliminare" }
+            sendMessage(chat_id, answer, false);
         } else if (contents.callback_query.message.text == "Categoria primaria:") {
             deleteMessage(chat_id, PropertiesService.getScriptProperties().getProperty('MsgId'));
 
@@ -247,6 +252,16 @@ function getUltimiMovimenti(){
   return ret;
 }
 
+function eliminaUltimoMovimento(){
+  var last = sheet.getLastRow()
+  if(last>1){
+    sheet.deleteRow(last)
+    return "OK"
+  }else{
+    return "KO"
+  }
+}
+
 function inserisciBenzina(importo, km, prezzo){
   var lRow = benzSheet.getLastRow();
   var lCol = benzSheet.getLastColumn()
@@ -275,7 +290,6 @@ function creaData(g,m,y){
 function numDigits(x) {
   return Math.max(Math.floor(Math.log10(Math.abs(x))), 0) + 1;
 }
-
 
 //  setta il dropdown per la categoria secondaria, chiamata quando si modifica manualmente il foglio
 function onEdit() {
