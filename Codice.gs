@@ -1,5 +1,5 @@
-function doGet(e) {
     //  viene attivata quando chiamata dal browser
+function doGet(e) {
     return HtmlService.createHtmlOutput("Ciao!");
 }
 
@@ -30,7 +30,6 @@ function doPost(e) {
         if (chat_id != myChatId) {
             return false
         }
-
         var check = (isNumeric(contents.message.text) && 
           PropertiesService.getScriptProperties().getProperty('Primaria') != "" &&
           PropertiesService.getScriptProperties().getProperty('Secondaria') != "") ||
@@ -38,11 +37,12 @@ function doPost(e) {
 
         if (contents.message.text.localeCompare("/start") == 0) {
             reset();
-            sendMessage(chat_id, "Ciao " + contents.message.from.first_name + "!", true, Comandi);
-        } else if (check) {
+            sendMessage(chat_id, "Ciao!", true, Comandi);
+        } else if (PropertiesService.getScriptProperties().getProperty('LastMsg') == "Importo" && check) {
             try {
               var primaria = PropertiesService.getScriptProperties().getProperty('Primaria')
               var secondaria = PropertiesService.getScriptProperties().getProperty('Secondaria')
+              var descrizione = PropertiesService.getScriptProperties().getProperty('Descrizione')
               var importo;
 
               //  controllo se devo inseririre anche la benzina
@@ -77,11 +77,13 @@ function doPost(e) {
               sheet.getRange(lRow + 1, 2, 1).setValue(Utilities.formatDate(new Date(), 'GMT', 'DD'));
               sheet.getRange(lRow + 1, 3, 1).setValue(primaria);
               sheet.getRange(lRow + 1, 4, 1).setValue(secondaria);
+              sheet.getRange(lRow + 1, 5, 1).setValue(descrizione);
 
               var answer = "Inserimento effettuato!%0A"
               answer += primaria + " ("
-              answer += secondaria + ") - "
-              answer += importo + "%0A%0A" + getRiepilogoMensile()
+              answer += secondaria + ") : "
+              answer += importo + " €%0A"
+              answer += descrizione + "%0A%0A" + getRiepilogoMensile("corrente")
               sendMessage(chat_id, answer, false);
               reset()
 
@@ -89,7 +91,22 @@ function doPost(e) {
                 reset()
                 sendMessage(chat_id, "Inserimento fallito!", false);
             }
+        } else if (PropertiesService.getScriptProperties().getProperty('LastMsg') == "Descrizione") {
+            var cat_secondaria = PropertiesService.getScriptProperties().getProperty('Secondaria')
+            deleteMessage(chat_id, PropertiesService.getScriptProperties().getProperty('MsgId'));
+            deleteMessage(chat_id, contents.message.message_id);
 
+            //  imposto la descrizione
+            let descrizione = contents.message.text
+            PropertiesService.getScriptProperties().setProperty('Descrizione', descrizione);
+            PropertiesService.getScriptProperties().setProperty('LastMsg', "Importo");
+            var answer = (cat_secondaria == "Benzina")?"Inserisci importo (€-km-€l)":"Inserisci importo"
+            sendMessage(chat_id, answer, false);
+        } else {
+          deleteMessage(chat_id, PropertiesService.getScriptProperties().getProperty('MsgId'));
+          deleteMessage(chat_id, contents.message.message_id);
+          reset()
+          sendMessage(chat_id, "Inserimento fallito!", false);
         }
     } else if (contents.callback_query != undefined) {
         var chat_id = contents.callback_query.from.id;
@@ -101,10 +118,12 @@ function doPost(e) {
             deleteMessage(chat_id, PropertiesService.getScriptProperties().getProperty('MsgId'));
             if(contents.callback_query.data == "AGGIUNGI MOVIMENTO"){
               sendMessage(chat_id, "Categoria primaria:", true, Primaria);
-            }else if(contents.callback_query.data == "RIEPILOGO MENSILE"){
-              sendMessage(chat_id, getRiepilogoMensile(), false);
+            }else if(contents.callback_query.data == "MESE"){
+              sendMessage(chat_id, getRiepilogoMensile("corrente"), false);
             }else if(contents.callback_query.data == "ULTIMI MOVIMENTI"){
               sendMessage(chat_id, getUltimiMovimenti(), false);
+            }else if(contents.callback_query.data == "MESE PRECEDENTE"){
+              sendMessage(chat_id, getRiepilogoMensile("precedente"), false);
             }
           
         } else if (contents.callback_query.message.text == "Categoria primaria:") {
@@ -122,10 +141,10 @@ function doPost(e) {
             //  imposto la categoria secondaria
             let cat_secondaria = contents.callback_query.data
             PropertiesService.getScriptProperties().setProperty('Secondaria', cat_secondaria);
-            var answer = cat_secondaria == "Benzina"?"Inserisci importo (€-km-€l)":"Inserisci importo"
-            sendMessage(chat_id, answer, false);
-
-        } else {}
+            //  lo devo salvare per inteccettare la risposta
+            PropertiesService.getScriptProperties().setProperty('LastMsg', "Descrizione");
+            sendMessage(chat_id, "Descrizione:", false);
+        }
     }
 }
 
@@ -167,6 +186,8 @@ function reset() {
     PropertiesService.getScriptProperties().setProperty('MsgId', "");
     PropertiesService.getScriptProperties().setProperty('Primaria', "");
     PropertiesService.getScriptProperties().setProperty('Secondaria', "");
+    PropertiesService.getScriptProperties().setProperty('Descrizione', "");
+    PropertiesService.getScriptProperties().setProperty('LastMsg', "");
 }
 
 function deleteMessage(chatId, msgId) {
@@ -179,34 +200,48 @@ function deleteMessage(chatId, msgId) {
     UrlFetchApp.fetch(url, options);
 }
 
-function getRiepilogoMensile(){
+function getRiepilogoMensile(tipo){
+  var rowMese, nome;
   var sheetRiepilogo = spreadsheet.getSheetByName(anno);
-  var rowMese = 3 + mese
-  var ret = "------------------%0A"
-  ret += "RIEPILOGO MENSILE %0A"
-  ret += "------------------%0A"
-  ret += "Spesa: " + sheetRiepilogo.getRange(2, rowMese, 1, 1).getValue() + "%0A"
-  ret += "Macchina: " + sheetRiepilogo.getRange(9, rowMese, 1, 1).getValue() + "%0A"
-  ret += "Viaggi: " + sheetRiepilogo.getRange(12, rowMese, 1, 1).getValue() + "%0A"
-  ret += "Altro: " + sheetRiepilogo.getRange(17, rowMese, 1, 1).getValue() + "%0A"
-  ret += "TOT: " + sheetRiepilogo.getRange(19, rowMese, 1, 1).getValue() + "%0A"
-  ret += "------------------%0A"
-  ret += "Investimenti: " + sheetRiepilogo.getRange(24, rowMese, 1, 1).getValue() + "%0A"
-  ret += "------------------%0A"
-  ret += "Entrate: " + sheetRiepilogo.getRange(29, rowMese, 1, 1).getValue() + "%0A"
-  ret += "------------------%0A"
+  if(tipo == "corrente"){
+    rowMese = 3 + mese
+    nome = nomeMese
+  }else if(tipo == "precedente"){
+    if(mese == 0){
+      return "Mese precedente non disponibile"
+    }else{
+      rowMese = 3 + (mese - 1)
+      nome = mesi[(mese - 1)]
+    }
+  }
+  
+  var ret = "------------------------------%0A"
+  ret += "RIEPILOGO " + nome + " %0A"
+  ret += "------------------------------%0A"
+  ret += "Spesa: " + sheetRiepilogo.getRange(2, rowMese, 1, 1).getValue() + " €%0A"
+  ret += "Macchina: " + sheetRiepilogo.getRange(9, rowMese, 1, 1).getValue() + " €%0A"
+  ret += "Viaggi: " + sheetRiepilogo.getRange(12, rowMese, 1, 1).getValue() + " €%0A"
+  ret += "Altro: " + sheetRiepilogo.getRange(17, rowMese, 1, 1).getValue() + " €%0A"
+  ret += "TOT: " + sheetRiepilogo.getRange(19, rowMese, 1, 1).getValue() + " €%0A"
+  ret += "------------------------------%0A"
+  ret += "Investimenti: " + sheetRiepilogo.getRange(24, rowMese, 1, 1).getValue() + " €%0A"
+  ret += "------------------------------%0A"
+  ret += "Entrate: " + sheetRiepilogo.getRange(29, rowMese, 1, 1).getValue() + " €%0A"
+  ret += "------------------------------%0A"
+  
   return ret
 }
 
-function getUltimiMovimenti(n=5){
+function getUltimiMovimenti(){
   var ret = "", lRow = sheet.getLastRow();
-  for(var i=0;i<n;i++){
-    if(lRow>1){
-      ret += sheet.getRange(lRow, 3, 1, 1).getValue() + " ("
-      ret += sheet.getRange(lRow, 4, 1, 1).getValue() + ") - "
-      ret += sheet.getRange(lRow, 1, 1, 1).getValue() + "%0A"
-      lRow--
-    }
+  for(var i=0; i<(lRow-1);i++){
+    var giorno = sheet.getRange(i+2, 2, 1, 1).getValue()
+    var data = creaData(giorno,mese+1,anno)
+    ret += "[" + data + "] "
+    ret += sheet.getRange(i+2, 3, 1, 1).getValue() + " ("
+    ret += sheet.getRange(i+2, 4, 1, 1).getValue() + ") - "
+    ret += sheet.getRange(i+2, 5, 1, 1).getValue() + " : "
+    ret += sheet.getRange(i+2, 1, 1, 1).getValue() + " €%0A"
   }
   if(ret == ""){ ret = "Nessun movimento questo mese" }
   return ret;
@@ -231,6 +266,16 @@ function encURI(str){
   var ret = str.replaceAll(")","\\)").replaceAll("(","\\(").replaceAll("-","\\-")
   return encodeURIComponent(ret)
 }
+
+function creaData(g,m,y){
+  return (numDigits(g) == 1 ? ("0" + g) : g) + "/" +
+    (numDigits(m) == 1 ? ("0" + m) : m) + "/" + + y
+}
+
+function numDigits(x) {
+  return Math.max(Math.floor(Math.log10(Math.abs(x))), 0) + 1;
+}
+
 
 //  setta il dropdown per la categoria secondaria, chiamata quando si modifica manualmente il foglio
 function onEdit() {
