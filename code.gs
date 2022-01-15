@@ -84,8 +84,7 @@ function doPost(e) {
               answer += secondaria + ") : "
               answer += importo + " €%0A"
               answer += descrizione + "%0A%0A" + getRiepilogoMensile("corrente")
-              sendMessage(chat_id, answer, false);
-              reset()
+              sendMessage(chat_id, answer, true, OnlyOKButton);
 
             } catch (e) {
                 reset()
@@ -119,18 +118,23 @@ function doPost(e) {
             if(contents.callback_query.data == "AGGIUNGI MOVIMENTO"){
               sendMessage(chat_id, "Categoria primaria:", true, Primaria);
             }else if(contents.callback_query.data == "MESE"){
-              sendMessage(chat_id, getRiepilogoMensile("corrente"), false);
+              sendMessage(chat_id, getRiepilogoMensile("corrente"), true, OnlyOKButton);
             }else if(contents.callback_query.data == "ULTIMI MOVIMENTI"){
-              sendMessage(chat_id, getUltimiMovimenti(), true, EliminaUltimoMovimento);
+              sendMessage(chat_id, getUltimiMovimenti(), true, UltimiMovimenti);
             }else if(contents.callback_query.data == "MESE PRECEDENTE"){
-              sendMessage(chat_id, getRiepilogoMensile("precedente"), false);
+              sendMessage(chat_id, getRiepilogoMensile("precedente"), true, OnlyOKButton);
             }          
-        }else if(contents.callback_query.data == "ELIMINA ULTIMO MOVIMENTO"){
+        } else if(contents.callback_query.data == "OK"){
+            //  torno alla home
+            deleteMessage(chat_id, PropertiesService.getScriptProperties().getProperty('MsgId'));
+            reset()
+            sendMessage(chat_id, "Ciao!", true, Comandi);
+        } else if(contents.callback_query.data == "ELIMINA ULTIMO MOVIMENTO"){
             deleteMessage(chat_id, PropertiesService.getScriptProperties().getProperty('MsgId'));
             var answer, res = eliminaUltimoMovimento()
             if(res == "OK"){ answer = "Movimento eliminato" }
             else{ answer = "Nessun movimento da eliminare" }
-            sendMessage(chat_id, answer, false);
+            sendMessage(chat_id, answer, true, OnlyOKButton);
         } else if (contents.callback_query.message.text == "Categoria primaria:") {
             deleteMessage(chat_id, PropertiesService.getScriptProperties().getProperty('MsgId'));
 
