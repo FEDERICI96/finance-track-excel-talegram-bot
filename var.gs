@@ -143,11 +143,23 @@ const Comandi = {
     }
 }
 
-const EliminaUltimoMovimento = {
+const UltimiMovimenti = {
     "reply_markup": {
         "inline_keyboard": [[{
             "text": "ELIMINA ULTIMO MOVIMENTO",
             "callback_data": "ELIMINA ULTIMO MOVIMENTO"
+        }],[{
+            "text": "✅",
+            "callback_data": "OK"
+        }]]
+    }
+}
+
+const OnlyOKButton = {
+    "reply_markup": {
+        "inline_keyboard": [[{
+            "text": "✅",
+            "callback_data": "OK"
         }]]
     }
 }
