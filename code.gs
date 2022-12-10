@@ -127,8 +127,8 @@ function doPost(e) {
               sendMessage(chat_id, getUltimiMovimenti(), true, UltimiMovimenti);
             }else if(contents.callback_query.data == "MESE PRECEDENTE"){
               sendMessage(chat_id, getRiepilogoMensile("precedente"), true, OnlyOKButton);
-            }else if(contents.callback_query.data == "PAC"){
-              sendMessage(chat_id, getPAC(), true, OnlyOKButton);
+            }else if(contents.callback_query.data == "PORTAFOGLIO"){
+              sendMessage(chat_id, getPortafoglio(), true, OnlyOKButton);
             }        
         } else if(contents.callback_query.data == "OK"){
             //  torno alla home
@@ -215,10 +215,13 @@ function deleteMessage(chatId, msgId) {
     UrlFetchApp.fetch(url, options);
 }
 
-function getPAC(){
-  var sheetPAC = SpreadsheetApp.getActive().getSheetByName('PAC')
+function getPortafoglio(){
+  let sheetPAC = SpreadsheetApp.getActive().getSheetByName('PAC')
+  let sheetPTF = SpreadsheetApp.getActive().getSheetByName('PORTAFOGLIO')
 
-  let ret = "Commissioni: " + (sheetPAC.getRange(1, 12).getValue()).toFixed(2) + " €%0A"
+  let ret = "--------------------- %0A"
+  ret += "PAC %0A"
+  ret += "Commissioni: " + (sheetPAC.getRange(1, 12).getValue()).toFixed(2) + " €%0A"
   ret += "VWCE: " + (sheetPAC.getRange(2, 12).getValue()).toFixed(2) + " €%0A"
   ret += "Quote: " + (sheetPAC.getRange(3, 12).getValue()).toFixed(2) + " %0A"
   ret += "Prezzo medio: " + (sheetPAC.getRange(4, 12).getValue()).toFixed(2) + " €%0A"
@@ -227,7 +230,19 @@ function getPAC(){
   ret += "Valore: " + (sheetPAC.getRange(6, 12).getValue()).toFixed(2) + " €%0A"
   ret += "%0A"
   ret += "Prof.: " + (sheetPAC.getRange(8, 12).getValue()).toFixed(2) + " €"
-  ret += " [" +(sheetPAC.getRange(9, 12).getValue()).toFixed(2) * 100 + " %25]"
+  ret += " [" + (sheetPAC.getRange(9, 12).getValue()).toFixed(2) * 100 + " %25]%0A"
+  ret += "--------------------- %0A"
+  ret += "AUTO %0A"
+  ret += (sheetPTF.getRange(4, 2).getValue()).toFixed(2) + " €%0A"
+  ret += "--------------------- %0A"
+  ret += "CRIPTO %0A"
+  ret += (sheetPTF.getRange(3, 2).getValue()).toFixed(2) + " €%0A"
+  ret += "--------------------- %0A"
+  ret += "LIQUIDITA %0A"
+  ret += "Prec: " + (sheetPTF.getRange(1, 2).getValue()).toFixed(2) + " €%0A"
+  ret += "Mese: " + (sheetPTF.getRange(1, 3).getValue()).toFixed(2) + " €%0A"
+  ret += "Stima: " + (sheetPTF.getRange(1, 4).getValue()).toFixed(2) + " €%0A"
+  ret += "---------------------"
 
   return ret
 
