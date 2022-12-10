@@ -16,7 +16,8 @@ function sendMessage(chat_id, text, opt=true, data) {
       } else { response = UrlFetchApp.fetch(url) }
       PropertiesService.getScriptProperties().setProperty('MsgId', JSON.parse(response.getContentText()).result.message_id)
     } catch (e) {
-        mailLogger("Error Log", e)
+      console.log(e)
+      mailLogger("Error Log", e)
     }
 }
 
@@ -73,10 +74,14 @@ function doPost(e) {
 
               //  inserimento dei dati
               sheet.getRange(lRow + 1, 1, 1).setValue(importo);
-              sheet.getRange(lRow + 1, 2, 1).setValue(Utilities.formatDate(new Date(), 'GMT', 'dd'));
+              sheet.getRange(lRow + 1, 2, 1).setValue(Utilities.formatDate(new Date(), 'GMT+1', 'dd'));
               sheet.getRange(lRow + 1, 3, 1).setValue(primaria);
               sheet.getRange(lRow + 1, 4, 1).setValue(secondaria);
               sheet.getRange(lRow + 1, 5, 1).setValue(descrizione);
+              //  timestamp
+              sheet.getRange(lRow + 1, 6, 1).setValue(Utilities.formatDate(new Date(), 'GMT+1', 'dd/MM/yy, HH:mm:ss'));
+
+              
 
               var answer = "Inserimento effettuato!%0A"
               answer += primaria + " ("
@@ -122,7 +127,9 @@ function doPost(e) {
               sendMessage(chat_id, getUltimiMovimenti(), true, UltimiMovimenti);
             }else if(contents.callback_query.data == "MESE PRECEDENTE"){
               sendMessage(chat_id, getRiepilogoMensile("precedente"), true, OnlyOKButton);
-            }          
+            }else if(contents.callback_query.data == "PAC"){
+              sendMessage(chat_id, getPAC(), true, OnlyOKButton);
+            }        
         } else if(contents.callback_query.data == "OK"){
             //  torno alla home
             deleteMessage(chat_id, PropertiesService.getScriptProperties().getProperty('MsgId'));
@@ -208,7 +215,26 @@ function deleteMessage(chatId, msgId) {
     UrlFetchApp.fetch(url, options);
 }
 
+function getPAC(){
+  var sheetPAC = SpreadsheetApp.getActive().getSheetByName('PAC')
+
+  let ret = "Commissioni: " + (sheetPAC.getRange(1, 12).getValue()).toFixed(2) + " €%0A"
+  ret += "VWCE: " + (sheetPAC.getRange(2, 12).getValue()).toFixed(2) + " €%0A"
+  ret += "Quote: " + (sheetPAC.getRange(3, 12).getValue()).toFixed(2) + " %0A"
+  ret += "Prezzo medio: " + (sheetPAC.getRange(4, 12).getValue()).toFixed(2) + " €%0A"
+  ret += "Costo totale: " + (sheetPAC.getRange(5, 12).getValue()).toFixed(2) + " €%0A"
+  ret += "%0A"
+  ret += "Valore: " + (sheetPAC.getRange(6, 12).getValue()).toFixed(2) + " €%0A"
+  ret += "%0A"
+  ret += "Prof.: " + (sheetPAC.getRange(8, 12).getValue()).toFixed(2) + " €"
+  ret += " [" +(sheetPAC.getRange(9, 12).getValue()).toFixed(2) * 100 + " %25]"
+
+  return ret
+
+}
+
 function getRiepilogoMensile(tipo){
+  // riferimento dacambiare
   var rowMese, nome;
   var sheetRiepilogo = spreadsheet.getSheetByName(anno);
   if(tipo == "corrente"){
@@ -223,18 +249,36 @@ function getRiepilogoMensile(tipo){
     }
   }
 
-  let Tot = (sheetRiepilogo.getRange(31, rowMese, 1, 1).getValue()).toFixed(2)
-  let TotInv = (sheetRiepilogo.getRange(32, rowMese, 1, 1).getValue()).toFixed(2)
-  let Perc = (sheetRiepilogo.getRange(33, rowMese, 1, 1).getValue()).toFixed(2) * 100
-  let PercInv = (sheetRiepilogo.getRange(34, rowMese, 1, 1).getValue()).toFixed(2) * 100
+  let Tot = sheetRiepilogo.getRange(31, rowMese, 1, 1).getValue()
+  Tot = Tot!=""?Tot.toFixed(2):Tot
+  let TotInv = sheetRiepilogo.getRange(32, rowMese, 1, 1).getValue()
+  TotInv = TotInv!=""?TotInv.toFixed(2):TotInv
+  let Perc = sheetRiepilogo.getRange(33, rowMese, 1, 1).getValue()
+  Perc = Perc!=""?(Perc.toFixed(2) * 100):Perc
+  let PercInv = sheetRiepilogo.getRange(34, rowMese, 1, 1).getValue()
+  PercInv = PercInv!=""?(PercInv.toFixed(2) * 100):PercInv
 
   var ret = "------------------------------%0A"
   ret += "RIEPILOGO " + nome + " %0A"
   ret += "------------------------------%0A"
   ret += "Spesa: " + (sheetRiepilogo.getRange(2, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
+  ret += "%3E Cibo: " + (sheetRiepilogo.getRange(3, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
+  ret += "%3E Bagno: " + (sheetRiepilogo.getRange(4, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
+  ret += "%3E Vestiti: " + (sheetRiepilogo.getRange(5, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
+  ret += "%3E Sport: " + (sheetRiepilogo.getRange(6, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
+  ret += "%3E Svago: " + (sheetRiepilogo.getRange(7, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
+  ret += "%3E Altro: " + (sheetRiepilogo.getRange(8, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
+  ret += "%0A"
+
   ret += "Macchina: " + (sheetRiepilogo.getRange(9, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
+  ret += "%3E Benzina: " + (sheetRiepilogo.getRange(10, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
+  ret += "%3E Altro: " + (sheetRiepilogo.getRange(11, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
+  ret += "%0A"
+
   ret += "Viaggi: " + (sheetRiepilogo.getRange(12, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
   ret += "Altro: " + (sheetRiepilogo.getRange(17, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
+  ret += "%0A"
+
   ret += "TOT: " + (sheetRiepilogo.getRange(19, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
   ret += "------------------------------%0A"
   ret += "Investimenti: " + (sheetRiepilogo.getRange(24, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
@@ -248,10 +292,15 @@ function getRiepilogoMensile(tipo){
 }
 
 function getUltimiMovimenti(){
-  var ret = "", lRow = sheet.getLastRow();
-  for(var i=0; i<(lRow-1);i++){
+  const nMov = 17;
+  var ret = "", lRow = sheet.getLastRow(), start = 0;
+  if(lRow>nMov){
+    start = lRow-nMov;
+    ret = "[..." + start + "...]%0A"
+  }
+  for(var i=start; i<(lRow-1);i++){
     var giorno = sheet.getRange(i+2, 2, 1, 1).getValue()
-    var data = creaData(giorno,mese+1,anno)
+    var data = creaData(giorno,mese+1)
     ret += "[" + data + "] "
     ret += sheet.getRange(i+2, 3, 1, 1).getValue() + " ("
     ret += sheet.getRange(i+2, 4, 1, 1).getValue() + ") - "
@@ -281,10 +330,10 @@ function inserisciBenzina(importo, km, prezzo){
   newRange = benzSheet.getRange(lRow + 1, 1, 1, lCol);
   newRange.setFormulas(formulas);
 
-  benzSheet.getRange(lRow + 1, 3, 1).setValue(Utilities.formatDate(new Date(), 'GMT', 'dd/mm/yyyy'));
-  benzSheet.getRange(lRow + 1, 4, 1).setValue(importo);
-  benzSheet.getRange(lRow + 1, 5, 1).setValue(km);
-  benzSheet.getRange(lRow + 1, 6, 1).setValue(prezzo);
+  benzSheet.getRange(lRow + 1, 1, 1).setValue(Utilities.formatDate(new Date(), 'GMT+1', 'dd/MM/yy'));
+  benzSheet.getRange(lRow + 1, 2, 1).setValue(importo);
+  benzSheet.getRange(lRow + 1, 3, 1).setValue(km);
+  benzSheet.getRange(lRow + 1, 4, 1).setValue(prezzo);
 }
 
 function encURI(str){
@@ -293,20 +342,14 @@ function encURI(str){
 }
 
 function creaData(g,m,y){
-  return (numDigits(g) == 1 ? ("0" + g) : g) + "/" +
-    (numDigits(m) == 1 ? ("0" + m) : m) + "/" + + y
+  let ret = (numDigits(g) == 1 ? ("0" + g) : g) + "/" +
+    (numDigits(m) == 1 ? ("0" + m) : m)
+  if(y != undefined){
+    ret +=  "/" + y
+  }
+  return ret
 }
 
 function numDigits(x) {
   return Math.max(Math.floor(Math.log10(Math.abs(x))), 0) + 1;
-}
-
-//  setta il dropdown per la categoria secondaria, chiamata quando si modifica manualmente il foglio
-function onEdit() {
-  var sheetName = spreadsheet.getSheetName()
-  if (mesi.includes(sheetName) && sheet.getActiveRange().getColumn() == 3 && sheet.getActiveRange().getRow() > 2) {
-      var primaria = sheet.getActiveRange().getValue()
-      var dataValidation = SpreadsheetApp.newDataValidation().requireValueInRange(sheet.getRange(primaria)).build()
-      sheet.getActiveRange().offset(0, 1).setDataValidation(dataValidation)
-  }
 }
