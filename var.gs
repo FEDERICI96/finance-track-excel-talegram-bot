@@ -1,42 +1,45 @@
 //eval(UrlFetchApp.fetch('http://path.to/external/javascript.js').getContentText());
 const mesi = ["GEN", "FEB", "MAR", "APR", "MAG", "GIU", "LUG", "AGO", "SET", "OTT", "NOV", "DIC"]
-const token = /*telegram bot token*/
+const token = "";
 const telegramUrl = "https://api.telegram.org/bot" + token;
-const webAppUrl = /*google app script web app url, used to set webhook*/
-const myChatId = /*telegram chat id*/
-const myEmail = /*mail for logging*/
-
-var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-var anno = (new Date()).getFullYear()
-var mese = (new Date()).getMonth()
-var nomeMese = mesi[mese]
-var sheet = spreadsheet.getSheetByName(nomeMese);
+const webAppUrl = "";
+const myChatId = ""
+const myEmail = ""
 
 try{
   //  va nel try perche va in errore quando viene chiamata onEdit()
-    var benzFile = SpreadsheetApp.openByUrl(/*url to fuel sheet*/)
-    var benzSheet = benzFile.getSheetByName("BENZINA")
+
+  //  a fine anno va cambiato con il collegamento al nuovo file
+  var spreadsheet = SpreadsheetApp.openByUrl("");
+  var anno = (new Date()).getFullYear()
+  var mese = (new Date()).getMonth()
+  var nomeMese = mesi[mese]
+  var sheet = spreadsheet.getSheetByName(nomeMese);
+
+  //var benzFile = SpreadsheetApp.openByUrl("")
+  var benzFile = SpreadsheetApp.openByUrl("")
+  var benzSheet = benzFile.getSheetByName("BENZINA")
 }catch(e){}
 
 const Primaria = {
     "reply_markup": {
         "inline_keyboard": [[{
-            "text": "SPESA",
+            "text": "🔴 SPESA 🔴",
             "callback_data": "Spesa"
         }], [{
-            "text": "MACCHINA",
+            "text": "🔴 MACCHINA 🔴",
             "callback_data": "Macchina"
         }], [{
-            "text": "VIAGGI",
+            "text": "🔴 VIAGGI 🔴",
             "callback_data": "Viaggi"
         }], [{
-            "text": "ALTRO",
+            "text": "🔴 ALTRO 🔴",
             "callback_data": "Altro"
         }], [{
-            "text": "INVESTIMENTI",
+            "text": "🔵 INVESTIMENTI 🔵",
             "callback_data": "Investimenti"
         }], [{
-            "text": "ENTRATE",
+            "text": "🟢 ENTRATE 🟢",
             "callback_data": "Entrate"
         }]]
     }
@@ -44,7 +47,11 @@ const Primaria = {
 const Secondaria = {
     Spesa: {
         "reply_markup": {
-            "inline_keyboard": [[{
+            "inline_keyboard": [
+              [{
+                "text": "CASA",
+                "callback_data": "Casa"
+            }], [{
                 "text": "CIBO",
                 "callback_data": "Cibo"
             }], [{
@@ -60,6 +67,9 @@ const Secondaria = {
                 "text": "SVAGO",
                 "callback_data": "Svago"
             }], [{
+                "text": "TRASPORTI",
+                "callback_data": "Trasporti"
+            }], [{
                 "text": "ALTRO",
                 "callback_data": "Altro"
             }]]
@@ -70,6 +80,9 @@ const Secondaria = {
             "inline_keyboard": [[{
                 "text": "BENZINA",
                 "callback_data": "Benzina"
+            }], [{
+                "text": "MANUTENZIONE",
+                "callback_data": "Manutenzione"
             }], [{
                 "text": "ALTRO",
                 "callback_data": "Altro"
@@ -87,6 +100,9 @@ const Secondaria = {
             }], [{
                 "text": "CIBO",
                 "callback_data": "Cibo"
+            }], [{
+                "text": "ATTIVITA",
+                "callback_data": "Attivita"
             }], [{
                 "text": "ALTRO",
                 "callback_data": "Altro"
@@ -107,8 +123,8 @@ const Secondaria = {
                 "text": "ETF",
                 "callback_data": "ETF"
             }], [{
-                "text": "CRIPTO",
-                "callback_data": "Cripto"
+                "text": "ALTRO",
+                "callback_data": "Altro"
             }]]
         }
     },
@@ -139,6 +155,9 @@ const Comandi = {
         }], [{
             "text": "MESE PRECEDENTE",
             "callback_data": "MESE PRECEDENTE"
+        }], [{
+            "text": "PAC",
+            "callback_data": "PAC"
         }]]
     }
 }
