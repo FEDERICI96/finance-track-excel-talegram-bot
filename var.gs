@@ -5,6 +5,7 @@ const telegramUrl = "https://api.telegram.org/bot" + token;
 const webAppUrl = "";
 const myChatId = ""
 const myEmail = ""
+const sheetLOG = SpreadsheetApp.getActive().getSheetByName('BOT LOG')
 
 try{
   //  va nel try perche va in errore quando viene chiamata onEdit()
@@ -24,22 +25,22 @@ try{
 const Primaria = {
     "reply_markup": {
         "inline_keyboard": [[{
-            "text": "🔴 SPESA 🔴",
+            "text": "SPESA",
             "callback_data": "Spesa"
         }], [{
-            "text": "🔴 MACCHINA 🔴",
+            "text": "MACCHINA",
             "callback_data": "Macchina"
         }], [{
-            "text": "🔴 VIAGGI 🔴",
+            "text": "VIAGGI",
             "callback_data": "Viaggi"
         }], [{
-            "text": "🔴 ALTRO 🔴",
+            "text": "ALTRO",
             "callback_data": "Altro"
         }], [{
-            "text": "🔵 INVESTIMENTI 🔵",
+            "text": "INVESTIMENTI",
             "callback_data": "Investimenti"
         }], [{
-            "text": "🟢 ENTRATE 🟢",
+            "text": "ENTRATE",
             "callback_data": "Entrate"
         }]]
     }
@@ -158,6 +159,9 @@ const Comandi = {
         }], [{
             "text": "PORTAFOGLIO",
             "callback_data": "PORTAFOGLIO"
+        }], [{
+            "text": "❌",
+            "callback_data": "CHIUDI"
         }]]
     }
 }
@@ -168,7 +172,7 @@ const UltimiMovimenti = {
             "text": "ELIMINA ULTIMO MOVIMENTO",
             "callback_data": "ELIMINA ULTIMO MOVIMENTO"
         }],[{
-            "text": "✅",
+            "text": "❌",
             "callback_data": "OK"
         }]]
     }
@@ -177,7 +181,7 @@ const UltimiMovimenti = {
 const OnlyOKButton = {
     "reply_markup": {
         "inline_keyboard": [[{
-            "text": "✅",
+            "text": "❌",
             "callback_data": "OK"
         }]]
     }
