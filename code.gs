@@ -1,4 +1,3 @@
-    //  viene attivata quando chiamata dal browser
 function doGet(e) {
     return HtmlService.createHtmlOutput("Ciao!");
 }
@@ -17,17 +16,19 @@ function sendMessage(chat_id, text, opt=true, data) {
       PropertiesService.getScriptProperties().setProperty('MsgId', JSON.parse(response.getContentText()).result.message_id)
     } catch (e) {
       mailLogger("Error Log", e)
+      sheetLogger(e)
     }
 }
 
 function doPost(e) {
-    //mailLogger("Execution Log", e)
     var contents = JSON.parse(e.postData.contents);
+    sheetLogger(JSON.stringify(contents))
 
     if (contents.message != undefined) {
         var chat_id = contents.message.from.id;
         if (chat_id != myChatId) {
-            return false
+          sheetLogger("#### ATTENZIONE ####")
+          return false
         }
         var check = (isNumeric(contents.message.text) && 
           PropertiesService.getScriptProperties().getProperty('Primaria') != "" &&
@@ -36,7 +37,8 @@ function doPost(e) {
 
         if (contents.message.text.localeCompare("/start") == 0) {
             reset();
-            sendMessage(chat_id, "Ciao!", true, Comandi);
+            deleteMessage(chat_id, contents.message.message_id)
+            sendMessage(chat_id, "Ciao!", true, Comandi)
         } else if (PropertiesService.getScriptProperties().getProperty('LastMsg') == "Importo" && check) {
             try {
               var primaria = PropertiesService.getScriptProperties().getProperty('Primaria')
@@ -87,7 +89,7 @@ function doPost(e) {
               answer += secondaria + ") : "
               answer += importo + " €%0A"
               answer += descrizione + "%0A%0A" + getRiepilogoMensile("corrente")
-              sendMessage(chat_id, answer, true, OnlyOKButton);
+              sendMessage(chat_id, answer, true, OnlyOKButton)
 
             } catch (e) {
                 reset()
@@ -128,7 +130,10 @@ function doPost(e) {
               sendMessage(chat_id, getRiepilogoMensile("precedente"), true, OnlyOKButton);
             }else if(contents.callback_query.data == "PORTAFOGLIO"){
               sendMessage(chat_id, getPortafoglio(), true, OnlyOKButton);
-            }        
+            } else if(contents.callback_query.data == "CHIUDI"){
+              reset()
+              deleteMessage(chat_id, PropertiesService.getScriptProperties().getProperty('MsgId'))
+            }      
         } else if(contents.callback_query.data == "OK"){
             //  torno alla home
             deleteMessage(chat_id, PropertiesService.getScriptProperties().getProperty('MsgId'));
@@ -159,7 +164,7 @@ function doPost(e) {
             PropertiesService.getScriptProperties().setProperty('LastMsg', "Descrizione");
             sendMessage(chat_id, "Descrizione:", false);
         }
-    }
+    } 
 }
 
 function setWebhook() {
@@ -308,6 +313,12 @@ function getRiepilogoMensile(tipo){
   ret += "Tot (inv): " + TotInv + " € [" + PercInv + "%25] %0A"
   ret += "------------------------------%0A"
   return ret
+}
+
+function sheetLogger(data){
+  sheetLOG.insertRowsAfter(1, 1);
+  sheetLOG.getRange(2, 1).setValue(Utilities.formatDate(new Date(), 'GMT+1', 'dd/MM/yy, HH:mm:ss'))
+  sheetLOG.getRange(2, 2).setValue(data)
 }
 
 function getUltimiMovimenti(){
