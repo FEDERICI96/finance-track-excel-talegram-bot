@@ -156,8 +156,8 @@ const Comandi = {
             "text": "MESE PRECEDENTE",
             "callback_data": "MESE PRECEDENTE"
         }], [{
-            "text": "PAC",
-            "callback_data": "PAC"
+            "text": "PORTAFOGLIO",
+            "callback_data": "PORTAFOGLIO"
         }]]
     }
 }
