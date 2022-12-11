@@ -16,7 +16,6 @@ function sendMessage(chat_id, text, opt=true, data) {
       } else { response = UrlFetchApp.fetch(url) }
       PropertiesService.getScriptProperties().setProperty('MsgId', JSON.parse(response.getContentText()).result.message_id)
     } catch (e) {
-      console.log(e)
       mailLogger("Error Log", e)
     }
 }
@@ -221,31 +220,36 @@ function getPortafoglio(){
 
   let ret = "--------------------- %0A"
   ret += "PAC %0A"
-  ret += "Commissioni: " + (sheetPAC.getRange(1, 12).getValue()).toFixed(2) + " €%0A"
-  ret += "VWCE: " + (sheetPAC.getRange(2, 12).getValue()).toFixed(2) + " €%0A"
-  ret += "Quote: " + (sheetPAC.getRange(3, 12).getValue()).toFixed(2) + " %0A"
-  ret += "Prezzo medio: " + (sheetPAC.getRange(4, 12).getValue()).toFixed(2) + " €%0A"
-  ret += "Costo totale: " + (sheetPAC.getRange(5, 12).getValue()).toFixed(2) + " €%0A"
+  ret += "Commissioni: " + getValueFormatted(sheetPAC.getRange(1, 12)) + " €%0A"
+  ret += "VWCE: " + getValueFormatted(sheetPAC.getRange(2, 12)) + " €%0A"
+  ret += "Quote: " + (sheetPAC.getRange(3, 12).getValue()) + " %0A"
+  ret += "Prezzo medio: " + getValueFormatted(sheetPAC.getRange(4, 12)) + " €%0A"
+  ret += "Costo totale: " + getValueFormatted(sheetPAC.getRange(5, 12)) + " €%0A"
   ret += "%0A"
-  ret += "Valore: " + (sheetPAC.getRange(6, 12).getValue()).toFixed(2) + " €%0A"
+  ret += "Valore: " + getValueFormatted(sheetPAC.getRange(6, 12)) + " €%0A"
   ret += "%0A"
-  ret += "Prof.: " + (sheetPAC.getRange(8, 12).getValue()).toFixed(2) + " €"
+  ret += "Prof.: " + getValueFormatted(sheetPAC.getRange(8, 12)) + " €"
   ret += " [" + (sheetPAC.getRange(9, 12).getValue()).toFixed(2) * 100 + " %25]%0A"
   ret += "--------------------- %0A"
   ret += "AUTO %0A"
-  ret += (sheetPTF.getRange(4, 2).getValue()).toFixed(2) + " €%0A"
+  ret += getValueFormatted(sheetPTF.getRange(4, 2)) + " €%0A"
   ret += "--------------------- %0A"
   ret += "CRIPTO %0A"
-  ret += (sheetPTF.getRange(3, 2).getValue()).toFixed(2) + " €%0A"
+  ret += getValueFormatted(sheetPTF.getRange(3, 2)) + " €%0A"
   ret += "--------------------- %0A"
   ret += "LIQUIDITA %0A"
-  ret += "Prec: " + (sheetPTF.getRange(1, 2).getValue()).toFixed(2) + " €%0A"
-  ret += "Mese: " + (sheetPTF.getRange(1, 3).getValue()).toFixed(2) + " €%0A"
-  ret += "Stima: " + (sheetPTF.getRange(1, 4).getValue()).toFixed(2) + " €%0A"
-  ret += "---------------------"
+  ret += "Prec: " + getValueFormatted(sheetPTF.getRange(1, 2)) + " €%0A"
+  ret += "Mese: " + getValueFormatted(sheetPTF.getRange(1, 3)) + " €%0A"
+  ret += "Stima: " + getValueFormatted(sheetPTF.getRange(1, 4)) + " €%0A"
+  ret += "--------------------- %0A"
+  ret += "TOTALE " + getValueFormatted(sheetPTF.getRange(6, 4)) + " €%0A"
 
   return ret
 
+}
+
+function getValueFormatted(e){
+  return (e.getValue()).toLocaleString('it-IT')
 }
 
 function getRiepilogoMensile(tipo){
@@ -264,41 +268,41 @@ function getRiepilogoMensile(tipo){
     }
   }
 
-  let Tot = sheetRiepilogo.getRange(31, rowMese, 1, 1).getValue()
-  Tot = Tot!=""?Tot.toFixed(2):Tot
-  let TotInv = sheetRiepilogo.getRange(32, rowMese, 1, 1).getValue()
-  TotInv = TotInv!=""?TotInv.toFixed(2):TotInv
-  let Perc = sheetRiepilogo.getRange(33, rowMese, 1, 1).getValue()
+  let Tot = sheetRiepilogo.getRange(31, rowMese).getValue()
+  Tot = Tot!=""?Tot.toLocaleString('it-IT'):Tot
+  let TotInv = sheetRiepilogo.getRange(32, rowMese).getValue()
+  TotInv = TotInv!=""?TotInv.toLocaleString('it-IT'):TotInv
+  let Perc = sheetRiepilogo.getRange(33, rowMese).getValue()
   Perc = Perc!=""?(Perc.toFixed(2) * 100):Perc
-  let PercInv = sheetRiepilogo.getRange(34, rowMese, 1, 1).getValue()
+  let PercInv = sheetRiepilogo.getRange(34, rowMese).getValue()
   PercInv = PercInv!=""?(PercInv.toFixed(2) * 100):PercInv
 
   var ret = "------------------------------%0A"
   ret += "RIEPILOGO " + nome + " %0A"
   ret += "------------------------------%0A"
-  ret += "Spesa: " + (sheetRiepilogo.getRange(2, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
-  ret += "%3E Cibo: " + (sheetRiepilogo.getRange(3, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
-  ret += "%3E Bagno: " + (sheetRiepilogo.getRange(4, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
-  ret += "%3E Vestiti: " + (sheetRiepilogo.getRange(5, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
-  ret += "%3E Sport: " + (sheetRiepilogo.getRange(6, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
-  ret += "%3E Svago: " + (sheetRiepilogo.getRange(7, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
-  ret += "%3E Altro: " + (sheetRiepilogo.getRange(8, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
+  ret += "Spesa: " + getValueFormatted(sheetRiepilogo.getRange(2, rowMese)) + " €%0A"
+  ret += "%3E Cibo: " + getValueFormatted(sheetRiepilogo.getRange(3, rowMese)) + " €%0A"
+  ret += "%3E Bagno: " + getValueFormatted(sheetRiepilogo.getRange(4, rowMese)) + " €%0A"
+  ret += "%3E Vestiti: " + getValueFormatted(sheetRiepilogo.getRange(5, rowMese)) + " €%0A"
+  ret += "%3E Sport: " + getValueFormatted(sheetRiepilogo.getRange(6, rowMese)) + " €%0A"
+  ret += "%3E Svago: " + getValueFormatted(sheetRiepilogo.getRange(7, rowMese)) + " €%0A"
+  ret += "%3E Altro: " + getValueFormatted(sheetRiepilogo.getRange(8, rowMese)) + " €%0A"
   ret += "%0A"
 
-  ret += "Macchina: " + (sheetRiepilogo.getRange(9, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
-  ret += "%3E Benzina: " + (sheetRiepilogo.getRange(10, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
-  ret += "%3E Altro: " + (sheetRiepilogo.getRange(11, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
+  ret += "Macchina: " + getValueFormatted(sheetRiepilogo.getRange(9, rowMese)) + " €%0A"
+  ret += "%3E Benzina: " + getValueFormatted(sheetRiepilogo.getRange(10, rowMese)) + " €%0A"
+  ret += "%3E Altro: " + getValueFormatted(sheetRiepilogo.getRange(11, rowMese)) + " €%0A"
   ret += "%0A"
 
-  ret += "Viaggi: " + (sheetRiepilogo.getRange(12, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
-  ret += "Altro: " + (sheetRiepilogo.getRange(17, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
+  ret += "Viaggi: " + getValueFormatted(sheetRiepilogo.getRange(12, rowMese)) + " €%0A"
+  ret += "Altro: " + getValueFormatted(sheetRiepilogo.getRange(17, rowMese)) + " €%0A"
   ret += "%0A"
 
-  ret += "TOT: " + (sheetRiepilogo.getRange(19, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
+  ret += "TOT: " + getValueFormatted(sheetRiepilogo.getRange(19, rowMese)) + " €%0A"
   ret += "------------------------------%0A"
-  ret += "Investimenti: " + (sheetRiepilogo.getRange(24, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
+  ret += "Investimenti: " + getValueFormatted(sheetRiepilogo.getRange(24, rowMese)) + " €%0A"
   ret += "------------------------------%0A"
-  ret += "Entrate: " + (sheetRiepilogo.getRange(29, rowMese, 1, 1).getValue()).toFixed(2) + " €%0A"
+  ret += "Entrate: " + getValueFormatted(sheetRiepilogo.getRange(29, rowMese)) + " €%0A"
   ret += "------------------------------%0A"
   ret += "Tot: " + Tot + " € [" + Perc + "%25] %0A"
   ret += "Tot (inv): " + TotInv + " € [" + PercInv + "%25] %0A"
@@ -317,10 +321,10 @@ function getUltimiMovimenti(){
     var giorno = sheet.getRange(i+2, 2, 1, 1).getValue()
     var data = creaData(giorno,mese+1)
     ret += "[" + data + "] "
-    ret += sheet.getRange(i+2, 3, 1, 1).getValue() + " ("
-    ret += sheet.getRange(i+2, 4, 1, 1).getValue() + ") - "
-    ret += sheet.getRange(i+2, 5, 1, 1).getValue() + " : "
-    ret += sheet.getRange(i+2, 1, 1, 1).getValue() + " €%0A"
+    ret += sheet.getRange(i+2, 3).getValue() + " ("
+    ret += sheet.getRange(i+2, 4).getValue() + ") - "
+    ret += sheet.getRange(i+2, 5).getValue() + " : "
+    ret += getValueFormatted(sheet.getRange(i+2, 1)) + " €%0A"
   }
   if(ret == ""){ ret = "Nessun movimento questo mese" }
   return ret;
