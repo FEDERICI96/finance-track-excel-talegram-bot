@@ -24,10 +24,11 @@ function doPost(e) {
     var contents = JSON.parse(e.postData.contents);
 
     if (contents.message != undefined) {
-        var chat_id = contents.message.from.id;
-        if (chat_id != myChatId) {
-          mailLogger("#### ATTENZIONE ####", chat_id)
-          sheetLogger("#### ATTENZIONE ####")
+        var chat_id = contents.message.from.id
+        var username = contents.message.from.username
+        if ((chat_id != myChatId) || (username != myUsername)) {
+          mailLogger("#### ATTENZIONE ####", contents)
+          sheetLogger("#### ATTENZIONE #### " + JSON.stringify(contents))
           return false
         }
         var check = (isNumeric(contents.message.text) && 
@@ -39,6 +40,12 @@ function doPost(e) {
             reset();
             deleteMessage(chat_id, contents.message.message_id)
             sendMessage(chat_id, "Ciao!", true, Comandi)
+        } else if (contents.message.text.localeCompare("/reset") == 0){
+            deleteMessage(chat_id, contents.message.message_id)
+            if (PropertiesService.getScriptProperties().getProperty('MsgId') != "" ){
+              deleteMessage(chat_id, PropertiesService.getScriptProperties().getProperty('MsgId'));
+            }
+            reset()
         } else if (PropertiesService.getScriptProperties().getProperty('LastMsg') == "Importo" && check) {
             try {
               var primaria = PropertiesService.getScriptProperties().getProperty('Primaria')
@@ -283,7 +290,8 @@ function getRiepilogoMensile(tipo){
   let PercInv = sheetRiepilogo.getRange(38, rowMese).getValue()
   PercInv = PercInv!=""?((PercInv * 100).toFixed(2)):PercInv
 
-  var ret = "------------------------------%0A"
+  var ret = "Spesi oggi: " + spesiOggi() + " €%0A"
+  ret += "------------------------------%0A"
   ret += "RIEPILOGO " + nome + " %0A"
   ret += "------------------------------%0A"
   ret += "Spesa: " + getValueFormatted(sheetRiepilogo.getRange(2, rowMese)) + " €%0A"
@@ -304,6 +312,13 @@ function getRiepilogoMensile(tipo){
   ret += "%0A"
 
   ret += "Viaggi: " + getValueFormatted(sheetRiepilogo.getRange(15, rowMese)) + " €%0A"
+  ret += "%3E Trasporti: " + getValueFormatted(sheetRiepilogo.getRange(16, rowMese)) + " €%0A"
+  ret += "%3E Casa: " + getValueFormatted(sheetRiepilogo.getRange(17, rowMese)) + " €%0A"
+  ret += "%3E Cibo: " + getValueFormatted(sheetRiepilogo.getRange(18, rowMese)) + " €%0A"
+  ret += "%3E Attivita: " + getValueFormatted(sheetRiepilogo.getRange(19, rowMese)) + " €%0A"
+  ret += "%3E Altro: " + getValueFormatted(sheetRiepilogo.getRange(20, rowMese)) + " €%0A"
+  ret += "%0A"
+  
   ret += "Altro: " + getValueFormatted(sheetRiepilogo.getRange(21, rowMese)) + " €%0A"
   ret += "%0A"
 
@@ -314,9 +329,16 @@ function getRiepilogoMensile(tipo){
   ret += "Entrate: " + getValueFormatted(sheetRiepilogo.getRange(33, rowMese)) + " €%0A"
   ret += "------------------------------%0A"
   ret += "Tot: " + Tot + " € [" + Perc + "%25] %0A"
-  ret += "Tot (inv): " + TotInv + " € [" + PercInv + "%25] %0A"
-  ret += "------------------------------%0A"
+  ret += "Tot (inv): " + TotInv + " € [" + PercInv + "%25]"
   return ret
+}
+
+function spesiOggi(){
+  var oggi = Utilities.formatDate(new Date(), 'GMT+1', 'dd')
+  var res = 0
+  var values = sheet.getRange("A2:B"+sheet.getLastRow()).getValues()
+  for (var i in values) { if (parseInt(oggi) == parseInt(values[i][1])){ res += values[i][0]} }
+  return res.toLocaleString('it-IT')
 }
 
 function sheetLogger(data){
@@ -346,6 +368,10 @@ function getUltimiMovimenti(){
     ret += getValueFormatted(sheet.getRange(i+2, 1)) + " €%0A"
   }
   if(ret == ""){ ret = "Nessun movimento questo mese" }
+  else {
+    ret += "------------------------------%0A"
+    ret += "Spesi oggi: " + spesiOggi() + " €%0A"
+  }
   return ret;
 }
 
