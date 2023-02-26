@@ -290,7 +290,10 @@ function getRiepilogoMensile(tipo){
   let PercInv = sheetRiepilogo.getRange(38, rowMese).getValue()
   PercInv = PercInv!=""?((PercInv * 100).toFixed(2)):PercInv
 
-  var ret = "Spesi oggi: " + spesiOggi() + " €%0A"
+  var ge = groupedExpenses()
+
+  var ret = "Spesi oggi: " + ge.todayExpenses + " €%0A"
+  ret += "Ultimi 7 giorni: " + ge.lastSevenDaysExpenses + " €%0A"
   ret += "------------------------------%0A"
   ret += "RIEPILOGO " + nome + " %0A"
   ret += "------------------------------%0A"
@@ -333,12 +336,23 @@ function getRiepilogoMensile(tipo){
   return ret
 }
 
-function spesiOggi(){
-  var oggi = Utilities.formatDate(new Date(), 'GMT+1', 'dd')
-  var res = 0
+function groupedExpenses(){
+  var today = Utilities.formatDate(new Date(), 'GMT+1', 'dd')
+  var todayExpenses = 0
+  var lastSevenDaysExpenses = 0
   var values = sheet.getRange("A2:B"+sheet.getLastRow()).getValues()
-  for (var i in values) { if (parseInt(oggi) == parseInt(values[i][1])){ res += values[i][0]} }
-  return res.toLocaleString('it-IT')
+  for (var i in values) {
+    if ((parseInt(today)-7) < parseInt(values[i][1])){
+      lastSevenDaysExpenses += values[i][0]
+    }
+    if (parseInt(today) == parseInt(values[i][1])){
+      todayExpenses += values[i][0]
+    } 
+  }
+  return {
+    "todayExpenses": todayExpenses.toLocaleString('it-IT'),
+    "lastSevenDaysExpenses": lastSevenDaysExpenses.toLocaleString('it-IT')
+  }
 }
 
 function sheetLogger(data){
@@ -369,8 +383,11 @@ function getUltimiMovimenti(){
   }
   if(ret == ""){ ret = "Nessun movimento questo mese" }
   else {
+    var ge = groupedExpenses()
+
     ret += "------------------------------%0A"
-    ret += "Spesi oggi: " + spesiOggi() + " €%0A"
+    ret += "Spesi oggi: " + ge.todayExpenses + " €%0A"
+    ret += "Ultimi 7 giorni: " + ge.lastSevenDaysExpenses + " €%0A"
   }
   return ret;
 }
