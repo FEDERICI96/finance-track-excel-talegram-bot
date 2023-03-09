@@ -146,7 +146,7 @@ function doPost(e) {
             deleteMessage(chat_id, PropertiesService.getScriptProperties().getProperty('MsgId'));
             reset()
             sendMessage(chat_id, "Ciao!", true, Comandi);
-        } else if(contents.callback_query.data == "ELIMINA ULTIMO MOVIMENTO"){
+        } else if(contents.callback_query.data == "ELIMINA ULTIMO"){
             deleteMessage(chat_id, PropertiesService.getScriptProperties().getProperty('MsgId'));
             var answer, res = eliminaUltimoMovimento()
             if(res == "OK"){ answer = "Movimento eliminato" }
@@ -266,7 +266,6 @@ function getValueFormatted(e){
 }
 
 function getRiepilogoMensile(tipo){
-  // riferimento dacambiare
   var rowMese, nome;
   var sheetRiepilogo = spreadsheet.getSheetByName(anno);
   if(tipo == "corrente"){
@@ -340,14 +339,16 @@ function groupedExpenses(){
   var today = Utilities.formatDate(new Date(), 'GMT+1', 'dd')
   var todayExpenses = 0
   var lastSevenDaysExpenses = 0
-  var values = sheet.getRange("A2:B"+sheet.getLastRow()).getValues()
+  var values = sheet.getRange("A2:C"+sheet.getLastRow()).getValues()
   for (var i in values) {
-    if ((parseInt(today)-7) < parseInt(values[i][1])){
-      lastSevenDaysExpenses += values[i][0]
+    if(values[i][2] != "Entrate" && values[i][2] != "Investimenti"){
+      if ((parseInt(today)-7) < parseInt(values[i][1])){
+        lastSevenDaysExpenses += values[i][0]
+      }
+      if (parseInt(today) == parseInt(values[i][1])){
+        todayExpenses += values[i][0]
+      }
     }
-    if (parseInt(today) == parseInt(values[i][1])){
-      todayExpenses += values[i][0]
-    } 
   }
   return {
     "todayExpenses": todayExpenses.toLocaleString('it-IT'),
@@ -397,7 +398,7 @@ function eliminaUltimoMovimento(){
   if(last>1){
     sheet.deleteRow(last)
     return "OK"
-  }else{
+  } else {
     return "KO"
   }
 }
@@ -416,11 +417,6 @@ function inserisciBenzina(importo, km, prezzo){
   benzSheet.getRange(lRow + 1, 3, 1).setValue(km);
   benzSheet.getRange(lRow + 1, 4, 1).setValue(prezzo);
   
-}
-
-function encURI(str){
-  var ret = str.replaceAll(")","\\)").replaceAll("(","\\(").replaceAll("-","\\-")
-  return encodeURIComponent(ret)
 }
 
 function creaData(g,m,y){
