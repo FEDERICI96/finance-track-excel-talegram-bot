@@ -186,3 +186,15 @@ const OnlyOKButton = {
         }]]
     }
 }
+
+const afterInsertButton = {
+    "reply_markup": {
+        "inline_keyboard": [[{
+            "text": "AGGIUNGI MOVIMENTO",
+            "callback_data": "AGGIUNGI MOVIMENTO"
+        }],[{
+            "text": "❌",
+            "callback_data": "OK"
+        }]]
+    }
+}
