@@ -10,7 +10,7 @@ function sendMessage(chat_id, text, opt=true, data) {
     };
     var url = telegramUrl + "/sendMessage?chat_id=" + chat_id + "&text=" + text;
     try {
-      var response;
+      var response
       if (opt) { response = UrlFetchApp.fetch(url, options)
       } else { response = UrlFetchApp.fetch(url) }
       PropertiesService.getScriptProperties().setProperty('MsgId', JSON.parse(response.getContentText()).result.message_id)
@@ -96,7 +96,7 @@ function doPost(e) {
               answer += secondaria + ") : "
               answer += importo + " €%0A"
               answer += descrizione + "%0A%0A" + getRiepilogoMensile("corrente")
-              sendMessage(chat_id, answer, true, OnlyOKButton)
+              sendMessage(chat_id, answer, true, afterInsertButton)
 
             } catch (e) {
                 reset()
@@ -141,6 +141,10 @@ function doPost(e) {
               reset()
               deleteMessage(chat_id, PropertiesService.getScriptProperties().getProperty('MsgId'))
             }      
+        }else if(contents.callback_query.data == "AGGIUNGI MOVIMENTO"){
+            //  dopo aver fatto un inserimento
+            deleteMessage(chat_id, PropertiesService.getScriptProperties().getProperty('MsgId'));
+            sendMessage(chat_id, "Categoria primaria:", true, Primaria);
         } else if(contents.callback_query.data == "OK"){
             //  torno alla home
             deleteMessage(chat_id, PropertiesService.getScriptProperties().getProperty('MsgId'));
@@ -148,10 +152,17 @@ function doPost(e) {
             sendMessage(chat_id, "Ciao!", true, Comandi);
         } else if(contents.callback_query.data == "ELIMINA ULTIMO"){
             deleteMessage(chat_id, PropertiesService.getScriptProperties().getProperty('MsgId'));
-            var answer, res = eliminaUltimoMovimento()
-            if(res == "OK"){ answer = "Movimento eliminato" }
-            else{ answer = "Nessun movimento da eliminare" }
-            sendMessage(chat_id, answer, true, OnlyOKButton);
+            var answer, btn
+            if( eliminaUltimoMovimento() ){ 
+              answer = "Movimento eliminato!%0A" 
+              answer += "%0A%0A" + getUltimiMovimenti()
+              btn = UltimiMovimenti
+            } else { 
+              answer = "Nessun movimento da eliminare"
+              btn = OnlyOKButton
+            }
+            sendMessage(chat_id, answer, true, btn)
+            
         } else if (contents.callback_query.message.text == "Categoria primaria:") {
             deleteMessage(chat_id, PropertiesService.getScriptProperties().getProperty('MsgId'));
 
@@ -256,9 +267,8 @@ function getPortafoglio(){
   ret += "Stima: " + getValueFormatted(sheetPTF.getRange(1, 4)) + " €%0A"
   ret += "--------------------- %0A"
   ret += "TOTALE " + getValueFormatted(sheetPTF.getRange(6, 4)) + " €%0A"
-Logger.log(ret)
+  
   return ret
-
 }
 
 function getValueFormatted(e){
@@ -397,9 +407,9 @@ function eliminaUltimoMovimento(){
   var last = sheet.getLastRow()
   if(last>1){
     sheet.deleteRow(last)
-    return "OK"
+    return true
   } else {
-    return "KO"
+    return false
   }
 }
 
